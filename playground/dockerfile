@@ -1,0 +1,11 @@
+# ベースイメージを指定
+FROM ubuntu:latest
+
+# 必要なパッケージをインストール
+RUN apt-get update && apt-get install -y <package-name>
+
+# ファイルをコンテナ内に追加
+COPY app /app
+
+# コンテナ内で実行するコマンドを指定
+CMD ["python", "/app/main.py"]
