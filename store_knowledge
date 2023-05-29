@@ -1,0 +1,7 @@
+dockerにおけるbind mountとvolumeの違う
+
+bind mount
+localのファイルに対してdockerがアクセスするイメージ
+
+volume
+dockerエンジンによってdataが永続化される
