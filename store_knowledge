@@ -1,7 +1,49 @@
-dockerにおけるbind mountとvolumeの違う
+containetの立ち上げ方
+containerはdockerfileを用いて立ち上げることができる
+＊他にも方法はあるが、今回はdockerfileの使用が求められておりこの方法を模索したい
+
+docker run --name some-nginx -d -p 8080:80 nginx
+docker run --name some-wordpress -e WORDPRESS_DB_PASSWORD=my-secret-pw --link some-mysql:mysql -d -p 8080:80 wordpress
+こういう文言で実行できる
+
+playgroundのdockerfileが具体例なので参照して欲しいかもしれない
+
+dockerfileの書き方
+［nginxなら...］
+FROM alpine:3.16
+RUN apk update && apk upgrade && apk add --no-cache nginx openssl
+--no-cacheを使えばキャッシュを使わずにインストールができる？
+挙動に差が出るかは不明
+
+RUN openssl req -x509 -nodes -days 356 -newkey rsa:2048 -out /etc/ssl/certs/
+Openssl req はopensslのコマンドラインを使用してssl証明書の生成や操作を行なっている
+-x509は自己証明書を生成している（自己証明書とは？？
+-nodesは、秘密鍵をパスフレーズで保護せずに生成するためのオプション
+-days 356は、証明書の有効期間を365日（約1年）に設定するためのオプション
+-newkey rsa:2048は、2048ビットのRSA秘密鍵を生成するためのオプション
+-out /etc/ssl/certs/は、生成されたSSL証明書を/etc/ssl/certs/ディレクトリに保存するためのパスを指定している
+
+satushi.42.fr.crt -keyout /etc/ssl/private/satushi.42.fr.key -subj "/CN=satushi.42.fr/"	
+satushi.42.fr.crtに生成された証明書が格納される
+-keyout /etc/ssl/private/satushi.42.fr.keyは、秘密鍵のファイル名とパスを指定しています。このファイルには、生成された秘密鍵が保存される。
+-subj "/CN=hoomen.42.fr/"は、証明書のサブジェクト（Subject）を指定しています。
+ここではCommon Name（CN）を指定しています。satushi.42.frが証明書の有効なドメイン名（例えば、HTTPS接続を行うためのWebサイトのドメイン名）です。
+
+COPY conf/nginx.conf /etc/nginx/http.d
+
+EXPOSE 443
+443番ポートの公開
+
+CMD ["nginx", "-g", "daemon off;"]
+
+---------------------------------
+
+dockerにおけるbind mountとvolumeの違い
 
 bind mount
 localのファイルに対してdockerがアクセスするイメージ
 
 volume
 dockerエンジンによってdataが永続化される
+
+nginxのコンテナを立ち上げてみよう

@@ -3,11 +3,22 @@ playgroundにお試しは作成
 
 makefileを用いてドッカーを立ち上げるっぽい？
 
-各Dockerイメージは、対応するサービスと同じ名前を持つ必要があります。つまり、NGINXのコンテナは「nginx」という名前に、WordPress + php-fpmのコンテナは「wordpress」という名前に、MariaDBのコンテナは「mariadb」という名前にする必要があります。
-各サービスは、独自のコンテナ内で実行される必要があります。つまり、NGINX、WordPress + php-fpm、MariaDBはそれぞれ別々のコンテナで実行される必要があります。
-パフォーマンスの観点から、コンテナはペンultimate安定版のAlpineまたはDebianからビルドする必要があります。どちらのディストリビューションを使用するかは、選択の余地があります。
-各サービスに対して、独自のDockerfileを作成する必要があります。各サービスに1つずつDockerfileを作成し、それらのDockerfileはdocker-compose.ymlからMakefileで呼び出される必要があります。
-プロジェクトのDockerイメージを自分自身でビルドする必要があります。既製のDockerイメージをプルしたり、DockerHubなどのサービスを使用することは禁止されています（ただし、AlpineまたはDebianはこのルールの例外です）。
+各Dockerイメージは、対応するサービスと同じ名前を持つ必要があります。
+つまり、NGINXのコンテナは「nginx」という名前に
+WordPress + php-fpmのコンテナは「wordpress」という名前に
+MariaDBのコンテナは「mariadb」という名前にする必要があります。
+各サービスは、独自のコンテナ内で実行される必要があります。
+つまり、NGINX、WordPress + php-fpm、MariaDBはそれぞれ別々のコンテナで実行される必要があります。
+パフォーマンスの観点から
+コンテナはペンultimate安定版のAlpineまたは
+Debianからビルドする必要があります。
+どちらのディストリビューションを使用するかは、選択の余地があります。
+各サービスに対して、独自のDockerfileを作成する必要があります。
+各サービスに1つずつDockerfileを作成し
+それらのDockerfileはdocker-compose.ymlからMakefileで呼び出される必要があります。
+プロジェクトのDockerイメージを自分自身でビルドする必要があります。
+既製のDockerイメージをプルしたり、DockerHubなどのサービスを使用することは禁止されています
+（ただし、AlpineまたはDebianはこのルールの例外です）。
 
 NGINXのみを含むDockerコンテナをセットアップする必要があります。このコンテナにはTLSv1.2またはTLSv1.3のみをサポートする設定が必要です。
 nginxなしでWordPress + php-fpmを含むDockerコンテナをセットアップする必要があります。WordPressとphp-fpmはインストールおよび設定されている必要があります。
