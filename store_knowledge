@@ -8,6 +8,14 @@ docker run --name some-wordpress -e WORDPRESS_DB_PASSWORD=my-secret-pw --link so
 
 playgroundのdockerfileが具体例なので参照して欲しいかもしれない
 
+docker compose --file composefile up -d --build
+docker composeでcomposeコマンドを実行する
+--fileでcomposeに使用するファイルを指定
+upを使いcomposeに記載されたサービスを立ち上げ
+-dでバックグラウンドで起動する
+--build: イメージのビルドを強制的に行う。
+Composeファイルに記述されたイメージのキャッシュを無視し、常に最新の状態でビルドします。
+
 dockerfileの書き方
 ［nginxなら...］
 FROM alpine:3.16

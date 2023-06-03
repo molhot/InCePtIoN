@@ -1,0 +1,39 @@
+version: '3'
+
+services:
+  nginx:
+    image: nginx
+    container_name: nginx
+    build:
+      context: nginx
+    ports:
+      - "443:443"
+    networks:
+      - inception
+    restart: unless-stopped
+
+  db:
+    image: mariadb
+    container_name: mariadb
+    build:
+      context: db
+      args:
+        DB_PASS: ${MYSQL_PASSWORD}
+        DB_DATABASE: ${MYSQL_DATABASE}
+        DB_USER: ${MYSQL_USER}
+        DB_NAME: ${MYSQL_NAME}
+
+    networks:
+      - inception
+
+    restart: unless-stopped
+
+networks:
+  inception:
+
+#restartpolicyにはいろいろあって
+# no：再起動しない
+# always：常に再起動する
+# on-failure：エラーで終了した場合に再起動する
+# unless-stopped：明示的に停止されるまで再起動する
+#のようになってるっぽい
