@@ -6,6 +6,8 @@ services:
     container_name: nginx
     build:
       context: nginx
+    depends_on:
+      - wp
     ports:
       - "443:443"
     networks:
@@ -27,6 +29,29 @@ services:
       - inception
 
     restart: unless-stopped
+    # volumes
+
+  wp:
+    image: wordpress
+    container_name: wordpress
+    restart: unless-stopped
+    build:
+      context: wordpress
+    # env_file:
+    #   - fileName
+    ports:
+      - 8080:80
+    environment:
+      WORDPRESS_DB_HOST: db
+      WORDPRESS_DB_USER: user
+      WORDPRESS_DB_PASSWORD: pass
+      WORDPRESS_DB_NAME: inception_wp
+    depends_on:
+      - db
+    networks:
+      - inception
+    # volumes:
+    #   -
 
 networks:
   inception:
