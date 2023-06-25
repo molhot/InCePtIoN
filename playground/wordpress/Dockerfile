@@ -1,24 +1,26 @@
-FROM php:7.4-fpm
+FROM alpine:3.16
 
-RUN apt-get update && \
-	apt-get install -y \
-	php \
-	php-fpm \
-	php-mbstring \
-	php-pdo\
-	php-mysqlnd \
-	mariadb-cliend \
-	sendmail \
-	curl \
-	libfreetype6-dev \
-    libjpeg62-turbo-dev \
-    libpng-dev \
-    libzip-dev \
-	vim \
-	&& docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install -j$(nproc) gd zip mysqli pdo_mysql
+RUN apk update && apk upgrade && \
+			apk add --no-cache \
+			php8 \
+			php8-fpm \
+			php8-mysqli \
+		 	php8-json \
+			php8-curl \
+    		php8-dom \
+			php8-exif \
+			php8-fileinfo \ 
+			php8-mbstring \
+    		php8-openssl \
+			php8-xml \
+			php8-zip \
+			php8-cli \
+			php8-phar \
+			mariadb-client \
+			wget \
+			ranger
 
-RUN curl -O \
+RUN wget \
 	https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar && \
 	chmod +x wp-cli.phar && \
 	mv wp-cli.phar /usr/local/bin/wp

@@ -13,6 +13,8 @@ services:
     networks:
       - inception
     restart: unless-stopped
+    volumes:
+      - wp-volume:/var/www/
 
   db:
     image: mariadb
@@ -20,16 +22,17 @@ services:
     build:
       context: db
       args:
-        DB_PASS: ${MYSQL_PASSWORD}
-        DB_DATABASE: ${MYSQL_DATABASE}
-        DB_USER: ${MYSQL_USER}
-        DB_NAME: ${MYSQL_NAME}
+        DB_PASS: ${DB_PASS}
+        DB_DATABASE: ${DB_NAME}
+        DB_USER: ${DB_USER}
+        DB_NAME: ${DB_NAME}
 
     networks:
       - inception
 
     restart: unless-stopped
-    # volumes
+    volumes:
+      - db-volume:/var/lib/mysql
 
   wp:
     image: wordpress
@@ -37,24 +40,31 @@ services:
     restart: unless-stopped
     build:
       context: wordpress
-    # env_file:
-    #   - fileName
+    env_file: .env
     ports:
       - 8080:80
-    environment:
-      WORDPRESS_DB_HOST: db
-      WORDPRESS_DB_USER: user
-      WORDPRESS_DB_PASSWORD: pass
-      WORDPRESS_DB_NAME: inception_wp
     depends_on:
       - db
     networks:
       - inception
-    # volumes:
-    #   -
+    volumes:
+      - wp-volume:/var/www/
 
 networks:
   inception:
+
+volumes:
+  wp-volume:
+    driver_opts:
+      o: bind
+      type: none
+      device: /home/satushi/data/wordpress
+
+  db-volume:
+    driver_opts:
+      o: bind
+      type: none
+      device: /home/satushi/data/mariadb
 
 #restartpolicyにはいろいろあって
 # no：再起動しない

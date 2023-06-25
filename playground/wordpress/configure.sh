@@ -8,6 +8,8 @@ sed -i "s/;listen.owner = nobody/listen.owner = nobody/g" \
 sed -i "s/;listen.group = nobody/listen.group = nobody/g" \
       /etc/php8/php-fpm.d/www.conf
 
+echo "HERE IS NOW REACHABLE"
+
 # download & configure wordpress
 if [ ! -f "/var/www/wp-config.php" ]; then
       wp core download --path=/var/www

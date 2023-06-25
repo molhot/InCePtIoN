@@ -1,14 +1,20 @@
+#https://hub.docker.com/_/mariadb
+#　この辺読めば幸せ
+
 FROM alpine:3.16
-ARG	MYSQL_PASSWORD \
-	MYSQL_DATABASE \
-	MYSQL_USER \
-	MYSQL_NAME
+ARG	DB_PASS \
+	DB_DATABASE \
+	DB_USER \
+	DB_NAME \
+	DB_ROOT
+
 RUN apk update && \
 		apk upgrade && \
 		apk add --no-cache mariadb mariadb-client
-# COPY db.sh .
-# RUN chmod +x mariadb.sh && \
-# 		sh db.sh && \
-# 		rm db.sh
+#多分mariadbはd好きインストール時に設定があり、その設定はきちんと設定されれていないためshファイルを用いた変更が必要である
+COPY db.sh .
+RUN chmod +x db.sh && \
+		sh db.sh && \
+		rm db.sh
 USER	mysql
 CMD mysqld_safe && tail -f /dev/null
