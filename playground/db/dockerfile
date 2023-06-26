@@ -17,4 +17,4 @@ RUN chmod +x db.sh && \
 		sh db.sh && \
 		rm db.sh
 USER	mysql
-CMD mysqld_safe && tail -f /dev/null
+CMD ["mysqld"]

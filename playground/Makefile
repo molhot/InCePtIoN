@@ -9,12 +9,12 @@ WP_DB_VOLUME		= $(VOLUME_DIR)/mariadb
 
 all: $(NAME)
 
-$(NAME):
+$(NAME): $(COMPOSE_FILE) create_volumes
 		$(COMPOSE) up -d --build
 
 #mkdir $(WP_CONTENT_VOLUME) $(WP_DB_VOLUME)
 create_volumes:
-	
+	mkdir -p $(WP_CONTENT_VOLUME) $(WP_DB_VOLUME)
 
 down:
 	$(COMPOSE) down

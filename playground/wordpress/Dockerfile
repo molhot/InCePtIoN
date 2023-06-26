@@ -26,6 +26,10 @@ RUN wget \
 	mv wp-cli.phar /usr/local/bin/wp
 
 WORKDIR /var/www/html
-COPY configure.sh /tmp/configure.sh
+COPY configure.sh .
 
-CMD [ "bash", "/tmp/configure.sh"]
+RUN 		chmod +x configure.sh
+
+ENTRYPOINT	["sh", "configure.sh"]
+
+CMD ["/usr/sbin/php-fpm8", "-F"]

@@ -26,6 +26,9 @@ services:
         DB_DATABASE: ${DB_NAME}
         DB_USER: ${DB_USER}
         DB_NAME: ${DB_NAME}
+    
+    expose:
+      - "3306"
 
     networks:
       - inception
@@ -40,27 +43,30 @@ services:
     restart: unless-stopped
     build:
       context: wordpress
+    expose:
+      - "9000"
     env_file: .env
-    ports:
-      - 8080:80
     depends_on:
       - db
     networks:
       - inception
     volumes:
       - wp-volume:/var/www/
+    #dockerコンテナ内の　var/wwwに紐付ける
 
 networks:
   inception:
 
 volumes:
   wp-volume:
+    driver: local
     driver_opts:
       o: bind
       type: none
       device: /home/satushi/data/wordpress
 
   db-volume:
+    driver: local
     driver_opts:
       o: bind
       type: none
