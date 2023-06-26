@@ -20,7 +20,7 @@ sed -i "s/#bind-address/bind-address/g" /ect/my.cnf.d/mariadb-server.cnf
 if [ ! -d "/var/lib/mysql/mysql" ]; then
 
         # init database
-        mysql_install_db --basedir=/usr --datadir=/var/lib/mysql --user=mysql
+        mysql_install_db --basedir=/usr --datadir=/var/lib/mysql --user=mysql --rpm > /dev/null
 
 fi
 #データベースがない場合に行うことである、つまり/var/lib/mysqlこいつがバインドされていればデータベースの情報が存在し続ける
@@ -47,3 +47,9 @@ EOF
         # remove the .sql file that contains the credentials
         rm -f /tmp/create_db.sql
 fi
+
+# allow remote connections
+sed -i "s|skip-networking|# skip-networking|g" /etc/mysql/mariadb.conf.d/50-server.cnf
+sed -i "s|.*bind-address\s*=.*|bind-address=0.0.0.0|g" /etc/mysql/mariadb.conf.d/50-server.cnf
+
+exec "$@"
