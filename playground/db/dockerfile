@@ -1,9 +1,5 @@
-#https://hub.docker.com/_/mariadb
-#　この辺読めば幸せ
-
 FROM debian:buster
 
-# MariaDB
 RUN apt-get update \
   && apt-get install -y mariadb-server mariadb-client vim
 
