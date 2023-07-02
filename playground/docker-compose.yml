@@ -3,69 +3,93 @@ version: '3'
 services:
   nginx:
     image: nginx
-    container_name: nginx
+    container_name: "nginx"
     build:
       context: nginx
     depends_on:
-      - wp
+      - wordpress
     ports:
       - "443:443"
     networks:
-      - inception
-    restart: unless-stopped
+      - docker-network
+    restart: always
     volumes:
-      - wp-volume:/var/www/
+      - wordpress:/var/www/html/wordpress
 
-  db:
+  mariadb:
     image: mariadb
-    container_name: mariadb
-    build:
-      context: db
-      args:
-        DB_PASS: ${DB_PASS}
-        DB_DATABASE: ${DB_NAME}
-        DB_USER: ${DB_USER}
-        DB_NAME: ${DB_NAME}
+    container_name: "mariadb"
+    build: db
     
     expose:
       - "3306"
 
     networks:
-      - inception
+      - docker-network
 
-    restart: unless-stopped
+    restart: always
     volumes:
-      - db-volume:/var/lib/mysql
+      - mariadb:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      WP_DATABASE_NAME: ${WP_DATABASE_NAME}
+      WP_DATABASE_USER: ${WP_DATABASE_USER}
+      WP_DATABASE_PASSWORD: ${WP_DATABASE_PASSWORD}
 
-  wp:
+    healthcheck:
+      test: mysql --protocol=tcp -u"$WP_DATABASE_USER" -p"$WP_DATABASE_PASSWORD" -hlocalhost --database="$WP_DATABASE_NAME" -e 'SELECT 1' &> /dev/null
+      interval: 5s
+      timeout: 10s
+      retries: 10
+      start_period: 10s
+
+  wordpress:
     image: wordpress
-    container_name: wordpress
-    restart: unless-stopped
-    build:
-      context: wordpress
+    container_name: "wordpress"
+    restart: always
+    build: wordpress
     expose:
       - "9000"
-    env_file: .env
     depends_on:
       - db
     networks:
-      - inception
+      - docker-network
     volumes:
-      - wp-volume:/var/www/
-    #dockerコンテナ内の　var/wwwに紐付ける
+      - wordpress:/var/www/html/wordpress
+    environment:
+      WP_DB_HOST: mariadb
+      WP_DB_USER: ${WP_DATABASE_USER}
+      WP_DB_PASSWORD: ${WP_DATABASE_PASSWORD}
+      WP_DB_NAME: ${WP_DATABASE_NAME}
+      WP_TITLE: ${WP_TITLE}
+      WP_ADMIN_USER: ${WP_ADMIN_USER}
+      WP_ADMIN_PASSWORD: ${WP_ADMIN_PASSWORD}
+      WP_ADMIN_EMAIL: ${WP_ADMIN_EMAIL}
+      WP_USER: ${WP_USER}
+      WP_PASSWORD: ${WP_PASSWORD}
+      WP_EMAIL: ${WP_EMAIL}
+
+    healthcheck:
+      test: wp core is-installed --allow-root --path=/var/www/html/wordpress &> /dev/null
+      interval: 5s
+      timeout: 30s
+      retries: 10
+      start_period: 30s
 
 networks:
-  inception:
+  docker-network:
+    name: docker-network
 
 volumes:
-  wp-volume:
+  wordpress:
+    name: wordpress
     driver: local
     driver_opts:
       o: bind
       type: none
       device: /home/satushi/data/wordpress
 
-  db-volume:
+  mariadb:
     driver: local
     driver_opts:
       o: bind

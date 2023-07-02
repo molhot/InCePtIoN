@@ -1,0 +1,6 @@
+[mysqld]
+port=3306
+init-file=/etc/mysql/initdb.d
+datadir=/var/lib/mysql
+skip-networking = 0
+skip-bind-address

@@ -1,13 +1,21 @@
-FROM alpine:3.16
-RUN apk update && \
-		apk upgrade && \
-		apk add --no-cache nginx openssl
-#apk add A Bを用いることで対象のイメージをインストールすることができる
-#キャッシュを利用してしまうと以前のバージョンが再利用されてしまう
-RUN openssl req -x509 -nodes -days 356 -newkey rsa:2048 \
-		-out /etc/ssl/certs/satushi.42.fr.crt \
-		-keyout /etc/ssl/private/satushi.42.fr.key -subj "/CN=satushi.42.fr/"
-#opensslを用いる事でサーバ間通信を実現することができる
-COPY nginx.conf /etc/nginx/http.d
-EXPOSE 443
-CMD ["nginx", "-g", "daemon off;"]
+# FROM alpine:3.16
+
+FROM debian:buster
+
+ENV debian_release="buster"
+
+RUN apt-get update \
+  && apt-get install -y systemd ca-certificates nginx
+
+COPY nginx.conf /etc/nginx/nginx.conf
+COPY default.conf /etc/nginx/conf.d/default.conf
+
+RUN apt-get update \
+  && apt-get install openssl
+
+COPY config.sh .
+RUN bash config.sh
+
+RUN adduser --system --group --no-create-home nginx
+
+CMD ["/usr/sbin/nginx"]

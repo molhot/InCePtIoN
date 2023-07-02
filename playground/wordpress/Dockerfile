@@ -1,35 +1,24 @@
-FROM alpine:3.16
+FROM debian:buster
 
-RUN apk update && apk upgrade && \
-			apk add --no-cache \
-			php8 \
-			php8-fpm \
-			php8-mysqli \
-		 	php8-json \
-			php8-curl \
-    		php8-dom \
-			php8-exif \
-			php8-fileinfo \ 
-			php8-mbstring \
-    		php8-openssl \
-			php8-xml \
-			php8-zip \
-			php8-cli \
-			php8-phar \
-			mariadb-client \
-			wget \
-			ranger
+RUN apt-get update \
+  && apt-get install -y \
+  git \
+  wget \
+  php \
+  php-fpm \
+  php-mbstring \
+  php-pdo \
+  php-mysqlnd \
+  mariadb-client \
+  curl \
+  vim \
+  sendmail
 
-RUN wget \
-	https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar && \
-	chmod +x wp-cli.phar && \
-	mv wp-cli.phar /usr/local/bin/wp
+RUN curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar && \
+  chmod +x wp-cli.phar && \
+  mv wp-cli.phar /usr/local/bin/wp
 
 WORKDIR /var/www/html
 COPY configure.sh .
 
-RUN 		chmod +x configure.sh
-
-ENTRYPOINT	["sh", "configure.sh"]
-
-CMD ["/usr/sbin/php-fpm8", "-F"]
+CMD ["bash", "configure.sh"]

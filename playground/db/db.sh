@@ -1,55 +1,85 @@
-#!bin/sh
-#稼働はalpinの上
+#!/bin/bash
 
-# make a directory where mariadb can acces the mysqld.sock socket file
-# change the ownership, because we will run the daemon as the mysql user
-mkdir /var/run/mysqld
-chown -R mysql:mysql /var/run/mysqld
+is_wpuser_created() {
+  mysql --protocol=socket -u"$WP_DATABASE_USER" -p"$WP_DATABASE_PASSWORD" -hlocalhost --database="$WP_DATABASE_NAME" -e 'SELECT 1' &> /dev/null
+}
 
-# change the config file so TCP/IP is no longer disabled
-#
-sed -i "s/skip-networking/skip-networking=0/g" /etc/my.cnf.d/mariadb-server.cnf
+# Do a temporary startup of the MariaDB server, for init purposes
+docker_temp_server_start() {
+  mysqld_safe &
+  echo "Waiting for server startup"
+  while true; do
+    if MYSQL_PWD=$MYSQL_ROOT_PASSWORD mysql --protocol=socket -uroot -hlocalhost --database=mysql -e 'SELECT 1' &> /dev/null; then
+      break
+    fi
+    sleep 1
+  done
+}
 
-# change the config file so that bind-address=0.0.0.0 is no longer commented out (this means mariadb can now bind to any address)
-sed -i "s/#bind-address/bind-address/g" /ect/my.cnf.d/mariadb-server.cnf
-#ect/my.cnf.d/mariadb-server.cnf ここにあるバインドアドレスの設定を変更するようなコード
+# Stop the server. When using a local socket file mariadb-admin will block until
+# the shutdown is complete.
+docker_temp_server_stop() {
+  if ! MYSQL_PWD=$MYSQL_ROOT_PASSWORD mysqladmin shutdown -uroot ; then
+    mysql_error "Unable to shut down server."
+  fi
+}
 
-# check if the system tables where already created, in which case the directory /var/lib/mysql/mysql will exist.
-# If it does not exist, install the system tables and store the data in /var/lib/mysql
-#/var/lib/mysql/mysql が存在しない場合＝データベースが初期化されていない場合
-if [ ! -d "/var/lib/mysql/mysql" ]; then
+configure_wpuser() {
+  TEMP_SQL_PATH="/tmp/init.sql"
 
-        # init database
-        mysql_install_db --basedir=/usr --datadir=/var/lib/mysql --user=mysql --rpm > /dev/null
-
-fi
-#データベースがない場合に行うことである、つまり/var/lib/mysqlこいつがバインドされていればデータベースの情報が存在し続ける
-
-# check if the wordpress database exists. If not yet, create a temporary create_db.sql script to (1) secure the database and (2) add the wordpress database.
-if [ ! -d "/var/lib/mysql/wordpress" ]; then
-
-        cat << EOF > /tmp/create_db.sql
+  # https://stackoverflow.com/questions/10299148/mysql-error-1045-28000-access-denied-for-user-billlocalhost-using-passw
+  # DELETE FROM mysql.user WHERE User='';
+  cat << EOF > $TEMP_SQL_PATH
 USE mysql;
 FLUSH PRIVILEGES;
-DELETE FROM     mysql.user WHERE User='';
-DROP DATABASE test;
-DELETE FROM mysql.db WHERE Db='test';
 DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1');
-ALTER USER 'root'@'localhost' IDENTIFIED BY '${DB_ROOT}';
-CREATE DATABASE ${DB_NAME} CHARACTER SET utf8 COLLATE utf8_general_ci;
-CREATE USER '${DB_USER}'@'%' IDENTIFIED by '${DB_PASS}';
-GRANT ALL PRIVILEGES ON wordpress.* TO '${DB_USER}'@'%';
+ALTER USER 'root'@'localhost' IDENTIFIED BY '$MYSQL_ROOT_PASSWORD';
+
+DROP DATABASE IF EXISTS $WP_DATABASE_NAME;
+CREATE DATABASE $WP_DATABASE_NAME CHARACTER SET utf8;
+CREATE USER '$WP_DATABASE_USER'@'%' IDENTIFIED by '$WP_DATABASE_PASSWORD';
+GRANT ALL PRIVILEGES ON $WP_DATABASE_NAME.* TO '$WP_DATABASE_USER'@'%';
 FLUSH PRIVILEGES;
 EOF
-        # run the mysql daemon with bootstrap so that it executes the .sql file
-        /usr/bin/mysqld --user=mysql --bootstrap < /tmp/create_db.sql
 
-        # remove the .sql file that contains the credentials
-        rm -f /tmp/create_db.sql
-fi
+  # execute init.sql
+  echo "execute ${TEMP_SQL_PATH}"
+  MYSQL_PWD=$MYSQL_ROOT_PASSWORD mysql --protocol=socket -uroot -hlocalhost < $TEMP_SQL_PATH
+  rm -f $TEMP_SQL_PATH
+}
 
-# allow remote connections
-sed -i "s|skip-networking|# skip-networking|g" /etc/mysql/mariadb.conf.d/50-server.cnf
-sed -i "s|.*bind-address\s*=.*|bind-address=0.0.0.0|g" /etc/mysql/mariadb.conf.d/50-server.cnf
+exec_mysqld_safe()
+{
+  exec "$@"
+}
 
-exec "$@"
+# $1 には daemon 名を渡す
+_main() {
+  mkdir -p /run/mysqld
+  chown -R mysql:mysql /run/mysqld
+  chown -R mysql:mysql /var/lib/mysql
+
+  # initialize datadir
+  mysql_install_db --basedir=/usr --datadir=/var/lib/mysql --user=mysql --rpm > /dev/null
+
+  docker_temp_server_start "$@"
+
+  if ! is_wpuser_created; then
+    configure_wpuser
+  fi
+
+  # docker_temp_server_stop
+
+  if ! MYSQL_PWD=$MYSQL_ROOT_PASSWORD mysqladmin shutdown -uroot ; then
+    mysql_error "Unable to shut down server."
+  fi
+
+  # allow remote connections
+  sed -i "s|skip-networking|# skip-networking|g" /etc/mysql/mariadb.conf.d/50-server.cnf
+  sed -i "s|.*bind-address\s*=.*|bind-address=0.0.0.0|g" /etc/mysql/mariadb.conf.d/50-server.cnf
+
+  # exec "$@"
+  exec_mysqld_safe "$@"
+}
+
+_main mysqld_safe
