@@ -2,16 +2,13 @@
 
 FROM debian:buster
 
-ENV debian_release="buster"
+# ENV debian_release="buster"
 
 RUN apt-get update \
-  && apt-get install -y systemd ca-certificates nginx
+  && apt-get install -y systemd ca-certificates nginx openssl
 
 COPY nginx.conf /etc/nginx/nginx.conf
 COPY default.conf /etc/nginx/conf.d/default.conf
-
-RUN apt-get update \
-  && apt-get install openssl
 
 COPY config.sh .
 RUN bash config.sh
