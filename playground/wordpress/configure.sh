@@ -50,6 +50,5 @@ sed -i "s|skip-networking|# skip-networking|g" /etc/php/7.3/fpm/pool.d/www.conf
 mkdir -p /run/php
 
 echo "start php-fpm7.3"
-echo "ENTER RETURN"
 
 exec_helper
